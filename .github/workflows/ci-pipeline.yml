@@ -1,11 +1,12 @@
-name: CI/CD with Self-Hosted Runner & Docker
+name: CI/CD Pipeline with Docker
 
-on: [push, pull_request]
+on: 
+  - push
+  - pull_request
 
 jobs:
-  build-and-deploy:
-    runs-on: self-hosted  # Uses your EC2 instance
-
+  test-runner:
+    runs-on: self-hosted
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -13,21 +14,28 @@ jobs:
       - name: Print System Info
         run: uname -a
 
-      - name: List Repository Files
+      - name: List Files
         run: ls -alh
 
-      - name: Build Docker Image
-        run: |
-          docker build -t my-app .
+  docker-deployment:
+    runs-on: self-hosted
+    needs: test-runner  # Ensures Docker deployment starts only after the test job completes
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Stop & Remove Existing Container (if any)
+      - name: Start Docker Container
         run: |
-          docker stop my-app-container || true
-          docker rm my-app-container || true
+          docker run -d \
+            --name my-container \
+            -p 8080:80 \
+            nginx:latest
 
-      - name: Run Docker Container
-        run: |
-          docker run -d --name my-app-container -p 80:80 my-app
+      - name: Verify Container Running
+        run: docker ps
 
-      - name: Verify Running Containers
-        run: docker ps -a
+      - name: Wait for Container (Optional)
+        run: sleep 5  # Ensures the container is fully started before testing
+
+      - name: Test Access to Container
+        run: curl http://localhost:8080
