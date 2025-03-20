@@ -1,10 +1,11 @@
-name: Test Self-Hosted Runner
+name: CI/CD with Self-Hosted Runner & Docker
 
 on: [push, pull_request]
 
 jobs:
-  test-runner:
-    runs-on: self-hosted
+  build-and-deploy:
+    runs-on: self-hosted  # Uses your EC2 instance
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v3
@@ -14,3 +15,19 @@ jobs:
 
       - name: List Repository Files
         run: ls -alh
+
+      - name: Build Docker Image
+        run: |
+          docker build -t my-app .
+
+      - name: Stop & Remove Existing Container (if any)
+        run: |
+          docker stop my-app-container || true
+          docker rm my-app-container || true
+
+      - name: Run Docker Container
+        run: |
+          docker run -d --name my-app-container -p 80:80 my-app
+
+      - name: Verify Running Containers
+        run: docker ps -a
