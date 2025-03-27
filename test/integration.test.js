@@ -1,14 +1,17 @@
-const request = require('supertest');
-const expect = require('chai').expect;
+const chai = require('chai');
+const chaiHttp = require('chai-http');
+const expect = chai.expect;
 
-describe('Integration Test: Nginx Web Server', function () {
-  it('should return status 200 and the greeting from the HTML file', function (done) {
-    request('http://localhost:8080') // Ensure this URL matches your running container 
+chai.use(chaiHttp);
+
+describe('Integration Test: Nginx Web Server', () => {
+  it('should return status 200 and the greeting from the HTML file', (done) => {
+    chai.request('http://localhost:8080&#39;)  // Assuming Docker container is mapped to port 8080
       .get('/')
-      .expect(200)
       .end((err, res) => {
-        if (err) return done(err);
-        expect(res.text).to.include('Hello from Docker!'); // Ensure this matches your actual HTML content
+        console.log(res);  // Debug the response object
+        expect(res).to.have.status(200);  // Ensure the server returns 200 status code
+        expect(res.text).to.include('Hello from Docker!');  // Ensure the HTML content is correct
         done();
       });
   });
