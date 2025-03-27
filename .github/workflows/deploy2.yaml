@@ -3,7 +3,7 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main  # This triggers the workflow on push to main branch new
+      - main  # This triggers the workflow on push to the main branch
 
 jobs:
   deploy:
@@ -16,7 +16,7 @@ jobs:
     - name: Set up Node.js
       uses: actions/setup-node@v3
       with:
-        node-version: '14'
+        node-version: '18'  # ✅ Use Node.js 18+
 
     - name: Install Dependencies
       run: npm install
@@ -35,8 +35,8 @@ jobs:
         docker stop my-html-container || true
         docker rm my-html-container || true
 
-    - name: Run New Container
-      run: docker run -d -p 8080:80 --name my-html-container my-html-app
+    - name: Run New Container with Correct Volume Mapping
+      run: docker run -d -p 8080:80 --name my-html-container -v $(pwd)/html/index.html:/usr/share/nginx/html/index.html my-html-app
 
     - name: Wait for Container to Initialize
       run: sleep 15
@@ -45,3 +45,6 @@ jobs:
       run: |
         docker ps -a
         docker logs my-html-container || true
+
+    - name: Verify Nginx Response Before Running Tests
+      run: curl -v http://localhost:8080
